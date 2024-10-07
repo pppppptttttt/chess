@@ -24,6 +24,7 @@ private:
 
   void draw_piece(int piece, raylib::Vector2 pos);
   void make_move(int pos);
+
   bool king_checked() const {
     return m_checked_squares[m_king_pos[m_turn == pieces::BLACK]];
   }
@@ -79,6 +80,17 @@ public:
           "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
   void draw();
+  bool mate() {
+    if (!king_checked()) {
+      return false;
+    }
+    for (int i = 0; i < 64; ++i) {
+      if (!generate_moves(i).empty()) {
+        return false;
+      }
+    }
+    return true;
+  }
 };
 
 } // namespace chess

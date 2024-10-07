@@ -25,6 +25,11 @@ int main() {
   while (!window.ShouldClose()) {
     window.BeginDrawing();
     board->draw();
+    if (board->mate()) {
+      TraceLog(LOG_INFO, "Mate.");
+      window.EndDrawing();
+      break;
+    }
     window.EndDrawing();
   }
 }
