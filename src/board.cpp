@@ -43,10 +43,22 @@ void chess::Board::load_textures() {
   }
 }
 
+void chess::Board::fill_checked_squares() {
+  m_checked_squares.fill(false);
+  for (int pos = 0; pos < 64; ++pos) {
+    for (int square : generate_moves(pos, true)) {
+      m_checked_squares[square] = true;
+    }
+  }
+}
+
 chess::Board::Board(std::string_view fen) {
   parse_board_from_fen(fen);
   precompute_move_data();
   load_textures();
+  toggle_turn();
+  fill_checked_squares();
+  toggle_turn();
 }
 
 void chess::Board::draw_piece(int piece, raylib::Vector2 pos) {
@@ -96,14 +108,10 @@ void chess::Board::make_move(int pos) {
     m_squares[pos] = m_turn | pieces::QUEEN;
   }
 
+  fill_checked_squares();
+  toggle_turn();
   m_selected_piece_square = -1;
   m_possible_moves.clear();
-
-  if (m_turn == pieces::BLACK) {
-    m_turn = pieces::WHITE;
-  } else {
-    m_turn = pieces::BLACK;
-  }
 }
 
 void chess::Board::draw() {
@@ -129,6 +137,9 @@ void chess::Board::draw() {
       int square_color = (rank + file) % 2 == 1 ? raylib::Color::White()
                                                 : raylib::Color::Gray();
       rect.Draw(raylib::Color(square_color));
+      if (m_checked_squares[pos]) {
+        rect.Draw(raylib::Color(0, 255, 0, 120));
+      }
 
       if (m_possible_moves.find(pos) != m_possible_moves.end()) {
         (rect.GetPosition() + Vector2{SQUARE_SIZE / 2.0f, SQUARE_SIZE / 2.0f})
