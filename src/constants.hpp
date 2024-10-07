@@ -5,7 +5,7 @@
 
 namespace chess {
 
-constexpr int SQUARE_SIZE = 128;
+constexpr int SQUARE_SIZE = 80;
 constexpr int WINDOW_WIDTH = SQUARE_SIZE * 8;
 constexpr int WINDOW_HEIGHT = SQUARE_SIZE * 8;
 constexpr std::string_view WINDOW_TITLE = "Chess";

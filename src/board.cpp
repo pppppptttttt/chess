@@ -1,7 +1,7 @@
 #include "board.hpp"
+#include "src/constants.hpp"
+#include "src/pieces.hpp"
 #include <algorithm>
-#include <string>
-#include <unordered_map>
 #include <utility>
 
 void chess::Board::precompute_move_data() {
@@ -27,32 +27,26 @@ void chess::Board::precompute_move_data() {
 chess::Board::Board(std::string_view fen) {
   parse_board_from_fen(fen);
   precompute_move_data();
+  using namespace pieces;
+  for (int piece = pieces::PAWN; piece <= pieces::KING; ++piece) { 
+    int piecew = piece | pieces::WHITE;
+    int pieceb = piece | pieces::BLACK;
+
+    raylib::Image imgw = raylib::Image(m_textures_paths[piecew])
+      .Mipmaps()
+      .Resize(SQUARE_SIZE, SQUARE_SIZE);
+
+    raylib::Image imgb = raylib::Image(m_textures_paths[pieceb])
+      .Mipmaps()
+      .Resize(SQUARE_SIZE, SQUARE_SIZE);
+
+    m_piece_textures[piecew] = raylib::Texture(imgw);
+    m_piece_textures[pieceb] = raylib::Texture(imgb);
+  }
 }
 
 void chess::Board::draw_piece(int piece, raylib::Vector2 pos) {
-  using namespace chess::pieces;
-  static std::unordered_map<int, raylib::Texture> cache;
-  static std::unordered_map<int, std::string> paths = {
-      {WHITE | PAWN, "bin/white-pawn.png"},
-      {WHITE | KNIGHT, "bin/white-knight.png"},
-      {WHITE | BISHOP, "bin/white-bishop.png"},
-      {WHITE | ROOK, "bin/white-rook.png"},
-      {WHITE | QUEEN, "bin/white-queen.png"},
-      {WHITE | KING, "bin/white-king.png"},
-
-      {BLACK | PAWN, "bin/black-pawn.png"},
-      {BLACK | KNIGHT, "bin/black-knight.png"},
-      {BLACK | BISHOP, "bin/black-bishop.png"},
-      {BLACK | ROOK, "bin/black-rook.png"},
-      {BLACK | QUEEN, "bin/black-queen.png"},
-      {BLACK | KING, "bin/black-king.png"}};
-
-  if (piece == NONE) {
-    return;
-  } else if (cache.find(piece) == cache.end()) {
-    cache[piece] = raylib::Texture(paths[piece]);
-  }
-  cache[piece].Draw(pos);
+  m_piece_textures[piece].Draw(pos);
 }
 
 void chess::Board::draw() {
