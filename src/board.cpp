@@ -7,7 +7,7 @@
 
 namespace {
 
-constexpr bool draw_checked = true;
+constexpr bool draw_checked = false;
 
 }  // namespace
 
@@ -38,12 +38,12 @@ void chess::Board::load_textures() {
     int pieceb = piece | pieces::BLACK;
 
     raylib::Image imgw = raylib::Image(m_textures_paths[piecew])
-                             .Mipmaps()
-                             .Resize(SQUARE_SIZE, SQUARE_SIZE);
+                             .Resize(SQUARE_SIZE, SQUARE_SIZE)
+                             .Mipmaps();
 
     raylib::Image imgb = raylib::Image(m_textures_paths[pieceb])
-                             .Mipmaps()
-                             .Resize(SQUARE_SIZE, SQUARE_SIZE);
+                             .Resize(SQUARE_SIZE, SQUARE_SIZE)
+                             .Mipmaps();
 
     m_piece_textures[piecew] = raylib::Texture(imgw);
     m_piece_textures[pieceb] = raylib::Texture(imgb);
@@ -153,13 +153,10 @@ void chess::Board::draw() {
           rect.Draw(raylib::Color(0, 255, 0, 120));
         }
       }
-      if (pos == m_king_pos[0] || pos == m_king_pos[1]) {
-          rect.Draw(raylib::Color(255, 0, 0, 120));
-      }
 
       if (m_possible_moves.find(pos) != m_possible_moves.end()) {
         (rect.GetPosition() + Vector2{SQUARE_SIZE / 2.0f, SQUARE_SIZE / 2.0f})
-            .DrawCircle(SQUARE_SIZE / 4.0f, raylib::Color::DarkPurple());
+            .DrawCircle(SQUARE_SIZE / 6.0f, raylib::Color::DarkPurple());
       }
 
       draw_piece(m_squares[pos],
