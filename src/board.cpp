@@ -9,7 +9,7 @@ namespace {
 
 constexpr bool draw_checked = true;
 
-}
+}  // namespace
 
 void chess::Board::precompute_move_data() {
   for (int rank = 0; rank < 8; ++rank) {
@@ -107,6 +107,10 @@ void chess::Board::make_move(int pos) {
     std::swap(m_squares[pos - 2], m_squares[pos + 1]);
   }
 
+  if (selected_piece == pieces::KING) {
+    m_king_pos[m_turn == pieces::BLACK] = pos;
+  }
+
   m_squares[pos] =
       std::exchange(m_squares[m_selected_piece_square], pieces::NONE);
 
@@ -115,9 +119,6 @@ void chess::Board::make_move(int pos) {
     m_squares[pos] = m_turn | pieces::QUEEN;
   }
 
-  if (king_checked()) {
-    TraceLog(LOG_ERROR, "Invalid move!!!!!");
-  }
   fill_checked_squares();
   m_selected_piece_square = -1;
   m_possible_moves.clear();
@@ -151,6 +152,9 @@ void chess::Board::draw() {
         if (m_checked_squares[pos]) {
           rect.Draw(raylib::Color(0, 255, 0, 120));
         }
+      }
+      if (pos == m_king_pos[0] || pos == m_king_pos[1]) {
+          rect.Draw(raylib::Color(255, 0, 0, 120));
       }
 
       if (m_possible_moves.find(pos) != m_possible_moves.end()) {

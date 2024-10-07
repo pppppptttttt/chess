@@ -1,4 +1,5 @@
 #include "board.hpp"
+#include "src/pieces.hpp"
 #include <utility>
 
 std::vector<int> chess::Board::generate_pawn_moves(int from_pos,
@@ -155,26 +156,60 @@ std::vector<int> chess::Board::generate_king_moves(int from_pos,
 }
 
 std::vector<int> chess::Board::generate_moves(int from_pos,
-                                              bool gen_threats) const {
+                                              bool gen_threats) {
   if ((m_squares[from_pos] & m_turn) == 0) {
     return {};
   }
 
+  std::vector<int> possible_moves_candidates;
   switch (m_squares[from_pos] & ~m_turn) {
   case pieces::PAWN:
-    return generate_pawn_moves(from_pos, gen_threats);
+    possible_moves_candidates = generate_pawn_moves(from_pos, gen_threats);
+    break;
   case pieces::KNIGHT:
-    return generate_knight_moves(from_pos, gen_threats);
+    possible_moves_candidates = generate_knight_moves(from_pos, gen_threats);
+    break;
   case pieces::BISHOP:
   case pieces::ROOK:
   case pieces::QUEEN:
-    return generate_sliding_piece_moves(from_pos, gen_threats);
+    possible_moves_candidates = generate_sliding_piece_moves(from_pos, gen_threats);
+    break;
   case pieces::KING:
-    return generate_king_moves(from_pos, gen_threats);
+    possible_moves_candidates = generate_king_moves(from_pos, gen_threats);
     break;
   default:
     std::unreachable();
   }
 
-  return {};
+  if (gen_threats) {
+    return possible_moves_candidates;
+  }
+
+  std::vector<int> possible_moves;
+  for (int move : possible_moves_candidates) {
+    const int save1 = m_squares[from_pos];
+    const int save2 = m_squares[move];
+    const int save3 = m_king_pos[m_turn == pieces::BLACK];
+    auto current_checked_squares = m_checked_squares;
+
+    if ((m_squares[from_pos] & ~m_turn) == pieces::KING) {
+      m_king_pos[m_turn == pieces::BLACK] = move;
+    }
+    m_squares[move] = std::exchange(m_squares[from_pos], pieces::NONE);
+    toggle_turn();
+    fill_checked_squares();
+    toggle_turn();
+    if (!king_checked()) {
+      possible_moves.push_back(move);
+    } else {
+      TraceLog(LOG_INFO, "Impossible move: %d %d", from_pos, move);
+    }
+
+    std::swap(current_checked_squares, m_checked_squares);
+    m_squares[from_pos] = save1;
+    m_squares[move] = save2;
+    m_king_pos[m_turn == pieces::BLACK] = save3;
+  }
+
+  return possible_moves;
 }

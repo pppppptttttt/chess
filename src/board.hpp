@@ -28,7 +28,7 @@ private:
     return m_checked_squares[m_king_pos[m_turn == pieces::BLACK]];
   }
 
-  std::vector<int> generate_moves(int from_pos, bool gen_threats = false) const;
+  std::vector<int> generate_moves(int from_pos, bool gen_threats = false);
 
   std::vector<int> generate_pawn_moves(int from_pos,
                                        bool gen_threats = false) const;
