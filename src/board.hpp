@@ -22,6 +22,8 @@ private:
   std::array<bool, 2> m_queenside_castle = {true, true};
   std::array<int, 2> m_king_pos = {0, 0};
 
+  std::unordered_map<std::size_t, std::size_t> m_positions_counter;
+
   void draw_piece(int piece, raylib::Vector2 pos);
   void make_move(int pos);
 
@@ -75,22 +77,15 @@ private:
       {pieces::BLACK | pieces::KING, "../bin/black-king.png"}};
 
 public:
+  enum class State { PLAYING, MATE, DRAW };
+
   explicit Board(
       std::string_view fen =
           "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
   void draw();
-  bool mate() {
-    if (!king_checked()) {
-      return false;
-    }
-    for (int i = 0; i < 64; ++i) {
-      if (!generate_moves(i).empty()) {
-        return false;
-      }
-    }
-    return true;
-  }
+
+  State game_state();
 };
 
 } // namespace chess

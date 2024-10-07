@@ -9,7 +9,7 @@ namespace {
 
 constexpr bool draw_checked = false;
 
-}  // namespace
+} // namespace
 
 void chess::Board::precompute_move_data() {
   for (int rank = 0; rank < 8; ++rank) {
@@ -164,4 +164,21 @@ void chess::Board::draw() {
                                  static_cast<float>(rank) * SQUARE_SIZE});
     }
   }
+}
+
+chess::Board::State chess::Board::game_state() {
+  const bool check = king_checked();
+
+  bool legal_moves = false;
+  for (int i = 0; i < 64; ++i) {
+    if (!generate_moves(i).empty()) {
+      legal_moves = true;
+      break;
+    }
+  }
+
+  if (!legal_moves) {
+    return check ? State::MATE : State::DRAW;
+  }
+  return State::PLAYING;
 }

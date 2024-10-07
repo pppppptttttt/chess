@@ -1,20 +1,7 @@
 #include "board.hpp"
 #include "constants.hpp"
-#include "raylib.h"
 #include <memory>
 #include <raylib-cpp.hpp>
-
-#if 0
-
-#ifdef WHITE
-#undef WHITE
-#endif // WHITE
-
-#ifdef BLACK
-#undef BLACK
-#endif // BLACK
-
-#endif
 
 int main() {
   raylib::Window window(chess::WINDOW_WIDTH, chess::WINDOW_HEIGHT,
@@ -25,8 +12,8 @@ int main() {
   while (!window.ShouldClose()) {
     window.BeginDrawing();
     board->draw();
-    if (board->mate()) {
-      TraceLog(LOG_INFO, "Mate.");
+    if (const auto s = board->game_state(); s != chess::Board::State::PLAYING) {
+      TraceLog(LOG_INFO, s == chess::Board::State::MATE ? "Mate." : "Draw.");
       window.EndDrawing();
       break;
     }

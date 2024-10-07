@@ -155,8 +155,7 @@ std::vector<int> chess::Board::generate_king_moves(int from_pos,
   return moves;
 }
 
-std::vector<int> chess::Board::generate_moves(int from_pos,
-                                              bool gen_threats) {
+std::vector<int> chess::Board::generate_moves(int from_pos, bool gen_threats) {
   if ((m_squares[from_pos] & m_turn) == 0) {
     return {};
   }
@@ -172,7 +171,8 @@ std::vector<int> chess::Board::generate_moves(int from_pos,
   case pieces::BISHOP:
   case pieces::ROOK:
   case pieces::QUEEN:
-    possible_moves_candidates = generate_sliding_piece_moves(from_pos, gen_threats);
+    possible_moves_candidates =
+        generate_sliding_piece_moves(from_pos, gen_threats);
     break;
   case pieces::KING:
     possible_moves_candidates = generate_king_moves(from_pos, gen_threats);
