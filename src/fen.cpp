@@ -46,6 +46,7 @@ void chess::Board::parse_board_from_fen(std::string_view fen) {
 
     case 'k':
       m_squares[cur_rank * 8 + cur_file++] = BLACK | KING;
+      m_king_pos[1] = cur_rank * 8 + cur_file - 1;
       break;
 
     case 'P':
@@ -70,6 +71,7 @@ void chess::Board::parse_board_from_fen(std::string_view fen) {
 
     case 'K':
       m_squares[cur_rank * 8 + cur_file++] = WHITE | KING;
+      m_king_pos[0] = cur_rank * 8 + cur_file - 1;
       break;
     }
   }

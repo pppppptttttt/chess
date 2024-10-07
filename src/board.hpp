@@ -20,9 +20,13 @@ private:
   int m_en_passant_target_square = -1;
   std::array<bool, 2> m_kingside_castle = {true, true};
   std::array<bool, 2> m_queenside_castle = {true, true};
+  std::array<int, 2> m_king_pos = {0, 0};
 
   void draw_piece(int piece, raylib::Vector2 pos);
   void make_move(int pos);
+  bool king_checked() const {
+    return m_checked_squares[m_king_pos[m_turn == pieces::BLACK]];
+  }
 
   std::vector<int> generate_moves(int from_pos, bool gen_threats = false) const;
 

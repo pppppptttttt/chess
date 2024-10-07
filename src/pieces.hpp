@@ -1,9 +1,7 @@
 #ifndef PIECES_HPP_
 #define PIECES_HPP_
 
-namespace chess {
-
-namespace pieces {
+namespace chess::pieces {
 
 // first 3 bits of integer for piece type
 constexpr int NONE = 0;
@@ -32,8 +30,6 @@ constexpr int BLACK = 16;
 // use bitwise or to get a piece, e.g.
 // int black_queen = chess::piece::BLACK | chess::piece::QUEEN;
 
-} // namespace pieces
-
-} // namespace chess
+} // namespace chess::pieces
 
 #endif // PIECES_HPP_

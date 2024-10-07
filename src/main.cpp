@@ -1,6 +1,7 @@
 #include "board.hpp"
 #include "constants.hpp"
 #include "raylib.h"
+#include <memory>
 #include <raylib-cpp.hpp>
 
 #if 0
@@ -18,12 +19,12 @@
 int main() {
   raylib::Window window(chess::WINDOW_WIDTH, chess::WINDOW_HEIGHT,
                         chess::WINDOW_TITLE.data(), FLAG_MSAA_4X_HINT);
-
   SetTargetFPS(chess::FPS);
-  chess::Board board;
+
+  auto board = std::make_unique<chess::Board>();
   while (!window.ShouldClose()) {
     window.BeginDrawing();
-    board.draw();
+    board->draw();
     window.EndDrawing();
   }
 }

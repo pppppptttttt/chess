@@ -1,8 +1,15 @@
 #include "board.hpp"
+#include "raylib.h"
 #include "src/constants.hpp"
 #include "src/pieces.hpp"
 #include <algorithm>
 #include <utility>
+
+namespace {
+
+constexpr bool draw_checked = true;
+
+}
 
 void chess::Board::precompute_move_data() {
   for (int rank = 0; rank < 8; ++rank) {
@@ -108,8 +115,10 @@ void chess::Board::make_move(int pos) {
     m_squares[pos] = m_turn | pieces::QUEEN;
   }
 
+  if (king_checked()) {
+    TraceLog(LOG_ERROR, "Invalid move!!!!!");
+  }
   fill_checked_squares();
-  toggle_turn();
   m_selected_piece_square = -1;
   m_possible_moves.clear();
 }
@@ -126,6 +135,7 @@ void chess::Board::draw() {
           rect.CheckCollision(GetMousePosition())) {
         if (m_possible_moves.find(pos) != m_possible_moves.end()) {
           make_move(pos);
+          toggle_turn();
         } else {
           m_selected_piece_square = pos;
           const auto &moves = generate_moves(pos);
@@ -134,11 +144,13 @@ void chess::Board::draw() {
         }
       }
 
-      int square_color = (rank + file) % 2 == 1 ? raylib::Color::White()
-                                                : raylib::Color::Gray();
+      const int square_color = (rank + file) % 2 == 1 ? raylib::Color::White()
+                                                      : raylib::Color::Gray();
       rect.Draw(raylib::Color(square_color));
-      if (m_checked_squares[pos]) {
-        rect.Draw(raylib::Color(0, 255, 0, 120));
+      if constexpr (draw_checked) {
+        if (m_checked_squares[pos]) {
+          rect.Draw(raylib::Color(0, 255, 0, 120));
+        }
       }
 
       if (m_possible_moves.find(pos) != m_possible_moves.end()) {
