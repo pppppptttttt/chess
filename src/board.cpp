@@ -24,29 +24,86 @@ void chess::Board::precompute_move_data() {
   }
 }
 
-chess::Board::Board(std::string_view fen) {
-  parse_board_from_fen(fen);
-  precompute_move_data();
+void chess::Board::load_textures() {
   using namespace pieces;
-  for (int piece = pieces::PAWN; piece <= pieces::KING; ++piece) { 
+  for (int piece = pieces::PAWN; piece <= pieces::KING; ++piece) {
     int piecew = piece | pieces::WHITE;
     int pieceb = piece | pieces::BLACK;
 
     raylib::Image imgw = raylib::Image(m_textures_paths[piecew])
-      .Mipmaps()
-      .Resize(SQUARE_SIZE, SQUARE_SIZE);
+                             .Mipmaps()
+                             .Resize(SQUARE_SIZE, SQUARE_SIZE);
 
     raylib::Image imgb = raylib::Image(m_textures_paths[pieceb])
-      .Mipmaps()
-      .Resize(SQUARE_SIZE, SQUARE_SIZE);
+                             .Mipmaps()
+                             .Resize(SQUARE_SIZE, SQUARE_SIZE);
 
     m_piece_textures[piecew] = raylib::Texture(imgw);
     m_piece_textures[pieceb] = raylib::Texture(imgb);
   }
 }
 
+chess::Board::Board(std::string_view fen) {
+  parse_board_from_fen(fen);
+  precompute_move_data();
+  load_textures();
+}
+
 void chess::Board::draw_piece(int piece, raylib::Vector2 pos) {
   m_piece_textures[piece].Draw(pos);
+}
+
+void chess::Board::make_move(int pos) {
+  // en passant
+  if ((m_squares[m_selected_piece_square] & pieces::PAWN) != 0 &&
+      pos == m_en_passant_target_square) {
+    if (m_turn == pieces::WHITE) {
+      m_squares[m_en_passant_target_square + 8] = pieces::NONE;
+    } else {
+      m_squares[m_en_passant_target_square - 8] = pieces::NONE;
+    }
+    m_en_passant_target_square = -1;
+  } else if ((m_squares[m_selected_piece_square] & pieces::PAWN) != 0 &&
+             std::abs(pos - m_selected_piece_square) == 16) {
+    if (m_turn == pieces::WHITE) {
+      m_en_passant_target_square = m_selected_piece_square - 8;
+    } else {
+      m_en_passant_target_square = m_selected_piece_square + 8;
+    }
+  } else {
+    m_en_passant_target_square = -1;
+  }
+
+  // castling
+  const int selected_piece = m_squares[m_selected_piece_square] & ~m_turn;
+  if (selected_piece == pieces::ROOK || selected_piece == pieces::KING) {
+    m_kingside_castle[m_turn != pieces::BLACK] = false;
+    m_queenside_castle[m_turn != pieces::BLACK] = false;
+  }
+
+  if (selected_piece == pieces::KING && pos - m_selected_piece_square == 2) {
+    std::swap(m_squares[pos - 1], m_squares[pos + 1]);
+  } else if (selected_piece == pieces::KING &&
+             pos - m_selected_piece_square == -2) {
+    std::swap(m_squares[pos - 2], m_squares[pos + 1]);
+  }
+
+  m_squares[pos] =
+      std::exchange(m_squares[m_selected_piece_square], pieces::NONE);
+
+  // promotion (TODO: not only queen)
+  if ((pos / 8 == 7 || pos / 8 == 0) && selected_piece == pieces::PAWN) {
+    m_squares[pos] = m_turn | pieces::QUEEN;
+  }
+
+  m_selected_piece_square = -1;
+  m_possible_moves.clear();
+
+  if (m_turn == pieces::BLACK) {
+    m_turn = pieces::WHITE;
+  } else {
+    m_turn = pieces::BLACK;
+  }
 }
 
 void chess::Board::draw() {
@@ -59,48 +116,9 @@ void chess::Board::draw() {
 
       if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
           rect.CheckCollision(GetMousePosition())) {
-        if (m_possible_moves.find(pos) !=
-            m_possible_moves.end()) { // then we are moving piece
-
-          if ((m_squares[m_selected_piece_square] & pieces::PAWN) != 0 &&
-              pos == m_en_passant_target_square) {
-            if (m_turn == pieces::WHITE) {
-              m_squares[m_en_passant_target_square + 8] = pieces::NONE;
-            } else {
-              m_squares[m_en_passant_target_square - 8] = pieces::NONE;
-            }
-            m_en_passant_target_square = -1;
-          } else if ((m_squares[m_selected_piece_square] & pieces::PAWN) != 0 &&
-                     std::abs(pos - m_selected_piece_square) == 16) {
-            if (m_turn == pieces::WHITE) {
-              m_en_passant_target_square = m_selected_piece_square - 8;
-            } else {
-              m_en_passant_target_square = m_selected_piece_square + 8;
-            }
-          } else {
-            m_en_passant_target_square = -1;
-          }
-
-          const int selected_piece =
-              m_squares[m_selected_piece_square] & ~m_turn;
-          if (selected_piece == pieces::ROOK ||
-              selected_piece == pieces::KING) {
-            m_kingside_castle[m_turn != pieces::BLACK] = false;
-            m_queenside_castle[m_turn != pieces::BLACK] = false;
-          }
-
-          m_squares[pos] =
-              std::exchange(m_squares[m_selected_piece_square], pieces::NONE);
-
-          m_selected_piece_square = -1;
-          m_possible_moves.clear();
-
-          if (m_turn == pieces::BLACK)
-            m_turn = pieces::WHITE;
-          else
-            m_turn = pieces::BLACK;
-
-        } else { // then we are watching piece moves
+        if (m_possible_moves.find(pos) != m_possible_moves.end()) {
+          make_move(pos);
+        } else {
           m_selected_piece_square = pos;
           const auto &moves = generate_moves(pos);
           m_possible_moves =
@@ -110,10 +128,12 @@ void chess::Board::draw() {
 
       int square_color = (rank + file) % 2 == 1 ? raylib::Color::White()
                                                 : raylib::Color::Gray();
-      if (m_possible_moves.find(pos) != m_possible_moves.end()) {
-        square_color = raylib::Color::Red();
-      }
       rect.Draw(raylib::Color(square_color));
+
+      if (m_possible_moves.find(pos) != m_possible_moves.end()) {
+        (rect.GetPosition() + Vector2{SQUARE_SIZE / 2.0f, SQUARE_SIZE / 2.0f})
+            .DrawCircle(SQUARE_SIZE / 4.0f, raylib::Color::DarkPurple());
+      }
 
       draw_piece(m_squares[pos],
                  raylib::Vector2{static_cast<float>(file) * SQUARE_SIZE,

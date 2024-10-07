@@ -2,9 +2,10 @@
 #define BOARD_HPP_
 
 #include <raylib-cpp.hpp>
+#include <array>
 #include <string_view>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include "pieces.hpp"
 
@@ -12,15 +13,16 @@ namespace chess {
 
 class Board {
 private:
-  int m_squares[64]{pieces::NONE};
+  std::array<int, 64> m_squares = {pieces::NONE};
   int m_turn = pieces::WHITE;
   int m_selected_piece_square = -1;
   std::unordered_set<int> m_possible_moves;
   int m_en_passant_target_square = -1;
-  bool m_kingside_castle[2]{true, true};
-  bool m_queenside_castle[2]{true, true};
+  std::array<bool, 2> m_kingside_castle = {true, true};
+  std::array<bool, 2> m_queenside_castle = {true, true};
 
   void draw_piece(int piece, raylib::Vector2 pos);
+  void make_move(int pos);
 
   std::vector<int> generate_moves(int from_pos) const;
 
@@ -29,11 +31,13 @@ private:
   std::vector<int> generate_king_moves(int from_pos) const;
   std::vector<int> generate_sliding_piece_moves(int from_pos) const;
 
-  static constexpr int m_direction_offsets[] = {-8, 8, -1, 1, -7, 7, 9, -9};
-  int m_squares_to_edge[64][8];
+  static constexpr std::array<int, 8> m_direction_offsets = {-8, 8, -1, 1,
+                                                             -7, 7, 9,  -9};
+  std::array<std::array<int, 8>, 64> m_squares_to_edge;
 
   void precompute_move_data();
   void parse_board_from_fen(std::string_view fen);
+  void load_textures();
 
   std::unordered_map<int, raylib::Texture> m_piece_textures;
   std::unordered_map<int, std::string> m_textures_paths = {
@@ -51,9 +55,10 @@ private:
       {pieces::BLACK | pieces::QUEEN, "../bin/black-queen.png"},
       {pieces::BLACK | pieces::KING, "../bin/black-king.png"}};
 
-
 public:
-  explicit Board(std::string_view fen);
+  explicit Board(
+      std::string_view fen =
+          "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
   void draw();
 };

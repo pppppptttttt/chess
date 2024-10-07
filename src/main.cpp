@@ -20,8 +20,7 @@ int main() {
                         chess::WINDOW_TITLE.data(), FLAG_MSAA_4X_HINT);
 
   SetTargetFPS(chess::FPS);
-  chess::Board board{
-      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"};
+  chess::Board board;
   while (!window.ShouldClose()) {
     window.BeginDrawing();
     board.draw();

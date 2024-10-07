@@ -129,6 +129,19 @@ std::vector<int> chess::Board::generate_king_moves(int from_pos) const {
       moves.push_back((rank + dy) * 8 + file + dx);
     }
   }
+
+  if (m_kingside_castle[m_turn != pieces::BLACK] &&
+      m_squares[from_pos + 1] == pieces::NONE &&
+      m_squares[from_pos + 2] == pieces::NONE) {
+    moves.push_back(from_pos + 2);
+  }
+  if (m_kingside_castle[m_turn != pieces::BLACK] &&
+      m_squares[from_pos - 1] == pieces::NONE &&
+      m_squares[from_pos - 2] == pieces::NONE &&
+      m_squares[from_pos - 3] == pieces::NONE) {
+    moves.push_back(from_pos - 2);
+  }
+
   return moves;
 }
 
