@@ -24,7 +24,9 @@ private:
   int m_moves_count = 0;
   int m_halfmoves_50rule_count = 0;
 
-  std::unordered_map<std::size_t, std::size_t> m_positions_counter;
+  // TODO: `zobrist hashing`, much faster.
+  std::unordered_map<std::string, int> m_positions_counter;
+  int m_position_occured_max_count = 1;
 
   void draw_piece(int piece, raylib::Vector2 pos);
   void make_move(int pos);

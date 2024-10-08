@@ -66,6 +66,7 @@ chess::Board::Board(std::string_view fen) {
   toggle_turn();
   fill_checked_squares();
   toggle_turn();
+  ++m_positions_counter[to_fen()];
 }
 
 void chess::Board::draw_piece(int piece, raylib::Vector2 pos) {
@@ -77,7 +78,8 @@ void chess::Board::make_move(int pos) {
   const int selected_piece = m_squares[m_selected_piece_square] & ~m_turn;
 
   if (m_squares[m_selected_piece_square] & pieces::PAWN ||
-      (m_squares[m_selected_piece_square] >> 3) != (m_squares[pos] >> 3)) {
+      (m_squares[pos] != pieces::NONE &&
+       (m_squares[m_selected_piece_square] >> 3) != (m_squares[pos] >> 3))) {
     m_halfmoves_50rule_count = 0;
   } else {
     ++m_halfmoves_50rule_count;
@@ -153,6 +155,14 @@ void chess::Board::draw() {
           if (m_turn == pieces::BLACK) {
             ++m_moves_count;
           }
+
+          std::string board_string_repr = to_fen();
+          auto it = board_string_repr.find_first_of(' ');
+          board_string_repr = std::string(board_string_repr.begin(),
+                                          board_string_repr.begin() + it);
+          m_position_occured_max_count =
+              std::max(++m_positions_counter[board_string_repr],
+                       m_position_occured_max_count);
           toggle_turn();
         } else {
           m_selected_piece_square = pos;
@@ -184,7 +194,7 @@ void chess::Board::draw() {
 }
 
 chess::Board::State chess::Board::game_state() {
-  if (m_halfmoves_50rule_count >= 100) {
+  if (m_halfmoves_50rule_count >= 100 || m_position_occured_max_count >= 3) {
     return State::DRAW;
   }
 
