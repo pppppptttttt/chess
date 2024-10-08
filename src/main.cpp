@@ -21,4 +21,5 @@ int main() {
     }
     window.EndDrawing();
   }
+  TraceLog(LOG_WARNING, "%s", board->to_fen().c_str());
 }

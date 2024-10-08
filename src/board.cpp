@@ -59,7 +59,7 @@ void chess::Board::fill_checked_squares() {
   }
 }
 
-chess::Board::Board(const std::string &fen) {
+chess::Board::Board(std::string_view fen) {
   parse_board_from_fen(fen);
   precompute_move_data();
   load_textures();
@@ -74,6 +74,15 @@ void chess::Board::draw_piece(int piece, raylib::Vector2 pos) {
 
 void chess::Board::make_move(int pos) {
   // en passant
+  const int selected_piece = m_squares[m_selected_piece_square] & ~m_turn;
+
+  if (m_squares[m_selected_piece_square] & pieces::PAWN ||
+      (m_squares[m_selected_piece_square] >> 3) != (m_squares[pos] >> 3)) {
+    m_halfmoves_50rule_count = 0;
+  } else {
+    ++m_halfmoves_50rule_count;
+  }
+
   if ((m_squares[m_selected_piece_square] & pieces::PAWN) != 0 &&
       pos == m_en_passant_target_square) {
     if (m_turn == pieces::WHITE) {
@@ -94,10 +103,15 @@ void chess::Board::make_move(int pos) {
   }
 
   // castling
-  const int selected_piece = m_squares[m_selected_piece_square] & ~m_turn;
-  if (selected_piece == pieces::ROOK || selected_piece == pieces::KING) {
+  if (selected_piece == pieces::KING) {
     m_kingside_castle[m_turn != pieces::BLACK] = false;
     m_queenside_castle[m_turn != pieces::BLACK] = false;
+  } else if (selected_piece == pieces::ROOK) {
+    if (m_selected_piece_square % 8 == 7) {
+      m_kingside_castle[m_turn != pieces::BLACK] = false;
+    } else {
+      m_queenside_castle[m_turn != pieces::BLACK] = false;
+    }
   }
 
   if (selected_piece == pieces::KING && pos - m_selected_piece_square == 2) {
@@ -136,6 +150,9 @@ void chess::Board::draw() {
           rect.CheckCollision(GetMousePosition())) {
         if (m_possible_moves.find(pos) != m_possible_moves.end()) {
           make_move(pos);
+          if (m_turn == pieces::BLACK) {
+            ++m_moves_count;
+          }
           toggle_turn();
         } else {
           m_selected_piece_square = pos;
@@ -167,8 +184,11 @@ void chess::Board::draw() {
 }
 
 chess::Board::State chess::Board::game_state() {
-  const bool check = king_checked();
+  if (m_halfmoves_50rule_count >= 100) {
+    return State::DRAW;
+  }
 
+  const bool check = king_checked();
   bool legal_moves = false;
   for (int i = 0; i < 64; ++i) {
     if (!generate_moves(i).empty()) {

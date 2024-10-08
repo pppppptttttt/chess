@@ -1,5 +1,9 @@
 #include "board.hpp"
 #include <cstdlib>
+#include <functional>
+#include <sstream>
+#include <unordered_map>
+#include <algorithm>
 
 #define early_return(cond)                                                     \
   do {                                                                         \
@@ -8,7 +12,7 @@
     }                                                                          \
   } while (0)
 
-void chess::Board::parse_board_from_fen(const std::string &fen) {
+void chess::Board::parse_board_from_fen(std::string_view fen) {
   using namespace pieces;
 
   std::size_t i = 0;
@@ -136,6 +140,100 @@ void chess::Board::parse_board_from_fen(const std::string &fen) {
     const int rank = 7 - (fen[i++] - '1');
     m_en_passant_target_square = rank * 8 + file;
   }
+
+  skip_spaces();
+  early_return(i == fen.size());
+
+  // moves count
+  while (i < fen.size() && !std::isspace(fen[i])) {
+    m_halfmoves_50rule_count *= 10;
+    m_halfmoves_50rule_count += static_cast<int>(fen[i++] - '0');
+  }
+
+  skip_spaces();
+  early_return(i == fen.size());
+
+  while (i < fen.size() && !std::isspace(fen[i])) {
+    m_moves_count *= 10;
+    m_moves_count += static_cast<int>(fen[i++] - '0');
+  }
 }
 
-std::string chess::Board::to_fen() const { return ""; }
+std::string chess::Board::to_fen() const {
+  using namespace pieces;
+
+  // pieces
+  std::unordered_map<int, char> dict = {
+      {BLACK | PAWN, 'p'}, {BLACK | KNIGHT, 'n'}, {BLACK | BISHOP, 'b'},
+      {BLACK | ROOK, 'r'}, {BLACK | QUEEN, 'q'},  {BLACK | KING, 'n'},
+      {WHITE | PAWN, 'P'}, {WHITE | KNIGHT, 'N'}, {WHITE | BISHOP, 'B'},
+      {WHITE | ROOK, 'R'}, {WHITE | QUEEN, 'Q'},  {WHITE | KING, 'K'},
+  };
+
+  std::ostringstream ss;
+  int gap = 0;
+  for (int i = 0; i < 64; ++i) {
+    if (i != 0 && i % 8 == 0) {
+      if (gap > 0) {
+        ss << gap;
+        gap = 0;
+      }
+      ss << '/';
+    }
+    if (m_squares[i] == NONE) {
+      ++gap;
+      if (gap == 8) {
+        ss << 8;
+        gap = 0;
+      }
+    } else {
+      if (gap > 0) {
+        ss << gap;
+        gap = 0;
+      }
+      ss << dict[m_squares[i]];
+    }
+  }
+  if (gap > 0 || gap == 8) {
+    ss << gap;
+  }
+  ss << ' ';
+
+  // turn
+  ss << (m_turn == BLACK ? 'b' : 'w');
+  ss << ' ';
+
+  // castling abilities
+  if (!std::any_of(std::begin(m_kingside_castle), std::end(m_kingside_castle),
+                   std::identity{}) &&
+      !std::any_of(std::begin(m_queenside_castle), std::end(m_queenside_castle),
+                   std::identity{})) {
+    ss << '-';
+  } else {
+    if (m_kingside_castle[1]) {
+      ss << 'K';
+    }
+    if (m_queenside_castle[1]) {
+      ss << 'Q';
+    }
+    if (m_kingside_castle[0]) {
+      ss << 'k';
+    }
+    if (m_queenside_castle[0]) {
+      ss << 'q';
+    }
+  }
+  ss << ' ';
+
+  // en passant
+  if (m_en_passant_target_square != -1) {
+    ss << static_cast<char>('a' + m_en_passant_target_square % 8)
+       << 8 - m_en_passant_target_square / 8;
+  } else {
+    ss << '-';
+  }
+
+  ss << ' ' << m_halfmoves_50rule_count << ' ' << m_moves_count;
+
+  return ss.str();
+}
