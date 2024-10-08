@@ -59,7 +59,7 @@ void chess::Board::fill_checked_squares() {
   }
 }
 
-chess::Board::Board(std::string_view fen) {
+chess::Board::Board(const std::string &fen) {
   parse_board_from_fen(fen);
   precompute_move_data();
   load_textures();

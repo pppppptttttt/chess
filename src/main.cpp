@@ -1,9 +1,11 @@
 #include "board.hpp"
 #include "constants.hpp"
+#include "raylib.h"
 #include <memory>
 #include <raylib-cpp.hpp>
 
 int main() {
+  SetTraceLogLevel(LOG_WARNING);
   raylib::Window window(chess::WINDOW_WIDTH, chess::WINDOW_HEIGHT,
                         chess::WINDOW_TITLE.data(), FLAG_MSAA_4X_HINT);
   SetTargetFPS(chess::FPS);

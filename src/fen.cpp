@@ -1,12 +1,29 @@
 #include "board.hpp"
+#include <cstdlib>
 
-void chess::Board::parse_board_from_fen(std::string_view fen) {
+#define early_return(cond)                                                     \
+  do {                                                                         \
+    if (static_cast<bool>(cond)) {                                             \
+      return;                                                                  \
+    }                                                                          \
+  } while (0)
+
+void chess::Board::parse_board_from_fen(const std::string &fen) {
   using namespace pieces;
-  int cur_file = 0, cur_rank = 0;
 
   std::size_t i = 0;
-  for (; i < fen.size() && !(cur_file > 7 && cur_rank == 7); ++i) {
+  auto skip_spaces = [&i, &fen]() {
+    while (i < fen.size() && std::isspace(fen[i])) {
+      ++i;
+    }
+  };
 
+  skip_spaces();
+  early_return(i == fen.size());
+
+  // pieces
+  for (int cur_file = 0, cur_rank = 0;
+       i < fen.size() && !(cur_file > 7 && cur_rank == 7); ++i) {
     switch (fen[i]) {
     case '1':
     case '2':
@@ -76,15 +93,49 @@ void chess::Board::parse_board_from_fen(std::string_view fen) {
     }
   }
 
-  while (i < fen.size() && std::isspace(fen[i])) {
-    ++i;
-  }
-  if (i == fen.size()) {
-    return;
-  }
-  if (fen[i] == 'b') {
+  skip_spaces();
+  early_return(i == fen.size());
+
+  // turn
+  if (fen[i++] == 'b') {
     m_turn = pieces::BLACK;
   } else {
     m_turn = pieces::WHITE;
   }
+
+  skip_spaces();
+  early_return(i == fen.size());
+
+  // catling abilities
+  while (i < fen.size() && std::isalpha(fen[i])) {
+    switch (fen[i]) {
+    case 'K':
+      m_kingside_castle[1] = true;
+      break;
+    case 'Q':
+      m_queenside_castle[1] = true;
+      break;
+    case 'k':
+      m_kingside_castle[0] = true;
+      break;
+    case 'q':
+      m_queenside_castle[0] = true;
+      break;
+    }
+    ++i;
+  }
+
+  skip_spaces();
+  early_return(i == fen.size());
+
+  // en passant targets
+  if (fen[i] == '-') {
+    ++i;
+  } else {
+    const int file = fen[i++] - 'a';
+    const int rank = 7 - (fen[i++] - '1');
+    m_en_passant_target_square = rank * 8 + file;
+  }
 }
+
+std::string chess::Board::to_fen() const { return ""; }
