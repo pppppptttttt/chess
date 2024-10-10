@@ -141,13 +141,17 @@ chess::Board::generate_king_moves(int from_pos, bool gen_threats) const {
 
   if (m_kingside_castle[m_turn != pieces::BLACK] &&
       m_squares[from_pos + 1] == pieces::NONE &&
-      m_squares[from_pos + 2] == pieces::NONE && !king_checked()) {
+      m_squares[from_pos + 2] == pieces::NONE &&
+      ((m_squares[from_pos + 3] & ~m_turn) == pieces::ROOK) &&
+      !king_checked()) {
     moves.insert(from_pos + 2);
   }
   if (m_kingside_castle[m_turn != pieces::BLACK] &&
       m_squares[from_pos - 1] == pieces::NONE &&
       m_squares[from_pos - 2] == pieces::NONE &&
-      m_squares[from_pos - 3] == pieces::NONE && !king_checked()) {
+      m_squares[from_pos - 3] == pieces::NONE &&
+      ((m_squares[from_pos + 3] & ~m_turn) == pieces::ROOK) &&
+      !king_checked()) {
     moves.insert(from_pos - 2);
   }
 

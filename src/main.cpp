@@ -1,5 +1,5 @@
-#include "board.hpp"
 #include "constants.hpp"
+#include "game.hpp"
 #include <memory>
 #include <raylib-cpp.hpp>
 
@@ -11,11 +11,14 @@ int main() {
   window.SetMinSize(chess::BOARD_WIDTH, chess::BOARD_HEIGHT);
   SetTargetFPS(chess::FPS);
 
-  auto board = std::make_unique<chess::Board>();
+  auto game = std::make_unique<chess::Game>();
   while (!window.ShouldClose()) {
     window.BeginDrawing();
-    board->draw();
-    if (const auto s = board->game_state(); s != chess::Board::State::PLAYING) {
+    if (IsKeyPressed(KEY_SPACE)) {
+      // board->unmake_last_move();
+    }
+    game->draw_board();
+    if (const auto s = game->state(); s != chess::Board::State::PLAYING) {
       TraceLog(LOG_WARNING, s == chess::Board::State::MATE ? "Mate." : "Draw.");
       window.EndDrawing();
       break;
