@@ -6,7 +6,6 @@
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 #include "pieces.hpp"
 
 namespace chess {
@@ -32,19 +31,20 @@ private:
   void make_move(int pos);
 
   bool king_checked() const {
-    return m_checked_squares[m_king_pos[m_turn == pieces::BLACK]];
+    return m_checked_squares[m_king_pos[m_turn != pieces::BLACK]];
   }
 
-  std::vector<int> generate_moves(int from_pos, bool gen_threats = false);
+  std::unordered_set<int> generate_moves(int from_pos,
+                                         bool gen_threats = false);
 
-  std::vector<int> generate_pawn_moves(int from_pos,
-                                       bool gen_threats = false) const;
-  std::vector<int> generate_knight_moves(int from_pos,
-                                         bool gen_threats = false) const;
-  std::vector<int> generate_king_moves(int from_pos,
-                                       bool gen_threats = false) const;
-  std::vector<int> generate_sliding_piece_moves(int from_pos,
+  std::unordered_set<int> generate_pawn_moves(int from_pos,
+                                              bool gen_threats = false) const;
+  std::unordered_set<int> generate_knight_moves(int from_pos,
                                                 bool gen_threats = false) const;
+  std::unordered_set<int> generate_king_moves(int from_pos,
+                                              bool gen_threats = false) const;
+  std::unordered_set<int>
+  generate_sliding_piece_moves(int from_pos, bool gen_threats = false) const;
 
   void toggle_turn() {
     if (m_turn == pieces::BLACK) {

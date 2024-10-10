@@ -8,6 +8,9 @@
 namespace {
 
 constexpr bool draw_checked = false;
+const raylib::Color white_square_color = raylib::Color(240, 217, 181);
+const raylib::Color black_square_color = raylib::Color(181, 136, 99);
+const raylib::Color circle_color = raylib::Color(130, 151, 105);
 
 } // namespace
 
@@ -74,10 +77,9 @@ void chess::Board::draw_piece(int piece, raylib::Vector2 pos) {
 }
 
 void chess::Board::make_move(int pos) {
-  // en passant
   const int selected_piece = m_squares[m_selected_piece_square] & ~m_turn;
 
-  if (m_squares[m_selected_piece_square] & pieces::PAWN ||
+  if (selected_piece == pieces::PAWN ||
       (m_squares[pos] != pieces::NONE &&
        (m_squares[m_selected_piece_square] >> 3) != (m_squares[pos] >> 3))) {
     m_halfmoves_50rule_count = 0;
@@ -85,6 +87,7 @@ void chess::Board::make_move(int pos) {
     ++m_halfmoves_50rule_count;
   }
 
+  // en passant
   if ((m_squares[m_selected_piece_square] & pieces::PAWN) != 0 &&
       pos == m_en_passant_target_square) {
     if (m_turn == pieces::WHITE) {
@@ -104,7 +107,7 @@ void chess::Board::make_move(int pos) {
     m_en_passant_target_square = -1;
   }
 
-  // castling
+  // castling abilities
   if (selected_piece == pieces::KING) {
     m_kingside_castle[m_turn != pieces::BLACK] = false;
     m_queenside_castle[m_turn != pieces::BLACK] = false;
@@ -116,6 +119,7 @@ void chess::Board::make_move(int pos) {
     }
   }
 
+  // castling
   if (selected_piece == pieces::KING && pos - m_selected_piece_square == 2) {
     std::swap(m_squares[pos - 1], m_squares[pos + 1]);
   } else if (selected_piece == pieces::KING &&
@@ -124,7 +128,7 @@ void chess::Board::make_move(int pos) {
   }
 
   if (selected_piece == pieces::KING) {
-    m_king_pos[m_turn == pieces::BLACK] = pos;
+    m_king_pos[m_turn != pieces::BLACK] = pos;
   }
 
   m_squares[pos] =
@@ -166,14 +170,15 @@ void chess::Board::draw() {
           toggle_turn();
         } else {
           m_selected_piece_square = pos;
-          const auto &moves = generate_moves(pos);
-          m_possible_moves =
-              decltype(m_possible_moves)(moves.begin(), moves.end());
+          m_possible_moves = generate_moves(pos);
         }
       }
 
-      const int square_color = (rank + file) % 2 == 1 ? raylib::Color::White()
-                                                      : raylib::Color::Gray();
+      int square_color =
+          (rank + file) % 2 == 1 ? black_square_color : white_square_color;
+      if (pos == m_selected_piece_square) {
+        square_color = circle_color;
+      }
       rect.Draw(raylib::Color(square_color));
       if constexpr (draw_checked) {
         if (m_checked_squares[pos]) {
@@ -182,8 +187,10 @@ void chess::Board::draw() {
       }
 
       if (m_possible_moves.find(pos) != m_possible_moves.end()) {
-        (rect.GetPosition() + Vector2{SQUARE_SIZE / 2.0f, SQUARE_SIZE / 2.0f})
-            .DrawCircle(SQUARE_SIZE / 6.0f, raylib::Color::DarkPurple());
+        const auto center = (rect.GetPosition() +
+                             Vector2{SQUARE_SIZE / 2.0f, SQUARE_SIZE / 2.0f});
+        center.DrawCircle(SQUARE_SIZE / 7.0f, circle_color);
+        // DrawCircleLinesV(center, SQUARE_SIZE / 7.0f, raylib::Color::Black());
       }
 
       draw_piece(m_squares[pos],
