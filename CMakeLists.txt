@@ -35,5 +35,5 @@ if (NOT raylib_cpp_FOUND)
     FetchContent_MakeAvailable(raylib_cpp)
 endif ()
 
-add_executable(${PROJECT_NAME} src/main.cpp src/board.cpp src/generate_moves.cpp src/fen.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/board.cpp src/generate_moves.cpp src/fen.cpp src/game.cpp)
 target_link_libraries(${PROJECT_NAME} raylib raylib_cpp)
