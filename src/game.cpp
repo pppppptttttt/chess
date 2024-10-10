@@ -2,8 +2,8 @@
 #include "constants.hpp"
 
 void chess::Game::draw_board() {
-  if (IsKeyPressed(KEY_SPACE) && m_board_history.size() > 1) {
-    m_board_history.pop_back();
+  if (IsKeyPressed(KEY_SPACE)) {
+    unmake_last_move();
   }
 
   for (int rank = 0; rank < 8; ++rank) {
