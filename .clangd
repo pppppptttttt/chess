@@ -1,0 +1,2 @@
+CompileFlags:
+  CompilationDatabase: debug/       # Search debug/ directory for compile_commands.json
