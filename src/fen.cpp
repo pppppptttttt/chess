@@ -165,7 +165,7 @@ std::string chess::Board::to_fen() const {
   // pieces
   std::unordered_map<int, char> dict = {
       {BLACK | PAWN, 'p'}, {BLACK | KNIGHT, 'n'}, {BLACK | BISHOP, 'b'},
-      {BLACK | ROOK, 'r'}, {BLACK | QUEEN, 'q'},  {BLACK | KING, 'n'},
+      {BLACK | ROOK, 'r'}, {BLACK | QUEEN, 'q'},  {BLACK | KING, 'k'},
       {WHITE | PAWN, 'P'}, {WHITE | KNIGHT, 'N'}, {WHITE | BISHOP, 'B'},
       {WHITE | ROOK, 'R'}, {WHITE | QUEEN, 'Q'},  {WHITE | KING, 'K'},
   };

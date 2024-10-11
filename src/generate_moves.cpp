@@ -1,33 +1,33 @@
 #include "board.hpp"
+#include "raylib.h"
 #include <utility>
 
 std::unordered_set<int>
-chess::Board::generate_pawn_moves(int from_pos, bool gen_threats) const {
-  const int file = from_pos % 8;
-  const int rank = from_pos / 8;
+chess::Board::generate_pawn_moves(int from, bool gen_threats) const {
+  const int file = from % 8;
+  const int rank = from / 8;
 
   std::unordered_set<int> moves;
 
-  switch (m_squares[from_pos] & pieces::WHITE) {
+  switch (m_squares[from] & pieces::WHITE) {
   case pieces::WHITE:
     if (rank == 6 && m_squares[40 + file] == pieces::NONE &&
         m_squares[32 + file] == pieces::NONE && !gen_threats) {
       moves.insert(32 + file);
     }
-    if (from_pos - 8 > 0 && m_squares[from_pos - 8] == pieces::NONE &&
-        !gen_threats) {
-      moves.insert(from_pos - 8);
+    if (from - 8 > 0 && m_squares[from - 8] == pieces::NONE && !gen_threats) {
+      moves.insert(from - 8);
     }
 
-    if (file != 7 && from_pos - 7 > 0 &&
-        ((m_squares[from_pos - 7] & pieces::BLACK) != 0 ||
-         from_pos - 7 == m_en_passant_target_square || gen_threats)) {
-      moves.insert(from_pos - 7);
+    if (file != 7 && from - 7 > 0 &&
+        ((m_squares[from - 7] & pieces::BLACK) != 0 ||
+         from - 7 == m_en_passant_target_square || gen_threats)) {
+      moves.insert(from - 7);
     }
-    if (file != 0 && from_pos - 9 > 0 &&
-        ((m_squares[from_pos - 9] & pieces::BLACK) != 0 ||
-         from_pos - 9 == m_en_passant_target_square || gen_threats)) {
-      moves.insert(from_pos - 9);
+    if (file != 0 && from - 9 > 0 &&
+        ((m_squares[from - 9] & pieces::BLACK) != 0 ||
+         from - 9 == m_en_passant_target_square || gen_threats)) {
+      moves.insert(from - 9);
     }
 
     break;
@@ -37,20 +37,19 @@ chess::Board::generate_pawn_moves(int from_pos, bool gen_threats) const {
         m_squares[24 + file] == pieces::NONE && !gen_threats) {
       moves.insert(24 + file);
     }
-    if (from_pos + 8 < 64 && m_squares[from_pos + 8] == pieces::NONE &&
-        !gen_threats) {
-      moves.insert(from_pos + 8);
+    if (from + 8 < 64 && m_squares[from + 8] == pieces::NONE && !gen_threats) {
+      moves.insert(from + 8);
     }
 
-    if (file != 0 && from_pos + 7 < 64 &&
-        ((m_squares[from_pos + 7] & pieces::WHITE) != 0 ||
-         from_pos + 7 == m_en_passant_target_square || gen_threats)) {
-      moves.insert(from_pos + 7);
+    if (file != 0 && from + 7 < 64 &&
+        ((m_squares[from + 7] & pieces::WHITE) != 0 ||
+         from + 7 == m_en_passant_target_square || gen_threats)) {
+      moves.insert(from + 7);
     }
-    if (file != 7 && from_pos + 9 < 64 &&
-        ((m_squares[from_pos + 9] & pieces::WHITE) != 0 ||
-         from_pos + 9 == m_en_passant_target_square || gen_threats)) {
-      moves.insert(from_pos + 9);
+    if (file != 7 && from + 9 < 64 &&
+        ((m_squares[from + 9] & pieces::WHITE) != 0 ||
+         from + 9 == m_en_passant_target_square || gen_threats)) {
+      moves.insert(from + 9);
     }
 
     break;
@@ -63,9 +62,9 @@ chess::Board::generate_pawn_moves(int from_pos, bool gen_threats) const {
 }
 
 std::unordered_set<int>
-chess::Board::generate_knight_moves(int from_pos, bool gen_threats) const {
-  const int file = from_pos % 8;
-  const int rank = from_pos / 8;
+chess::Board::generate_knight_moves(int from, bool gen_threats) const {
+  const int file = from % 8;
+  const int rank = from / 8;
 
   std::unordered_set<int> moves;
   constexpr std::array<std::array<int, 2>, 8> shifts = {
@@ -81,12 +80,11 @@ chess::Board::generate_knight_moves(int from_pos, bool gen_threats) const {
 }
 
 std::unordered_set<int>
-chess::Board::generate_sliding_piece_moves(int from_pos,
-                                           bool gen_threats) const {
+chess::Board::generate_sliding_piece_moves(int from, bool gen_threats) const {
   std::unordered_set<int> moves;
 
   int start_index = 0, end_index = 8;
-  int sq_piece = m_squares[from_pos] & ~m_turn;
+  int sq_piece = m_squares[from] & ~m_turn;
 
   if (sq_piece == pieces::BISHOP) {
     start_index = 4;
@@ -98,9 +96,9 @@ chess::Board::generate_sliding_piece_moves(int from_pos,
 
   for (int direction_index = start_index; direction_index < end_index;
        ++direction_index) {
-    for (int i = 0; i < m_squares_to_edge[from_pos][direction_index]; ++i) {
+    for (int i = 0; i < m_squares_to_edge[from][direction_index]; ++i) {
       const int target_pos =
-          from_pos + m_direction_offsets[direction_index] * (i + 1);
+          from + m_direction_offsets[direction_index] * (i + 1);
       if (target_pos > 63) {
         break;
       }
@@ -124,9 +122,9 @@ chess::Board::generate_sliding_piece_moves(int from_pos,
 }
 
 std::unordered_set<int>
-chess::Board::generate_king_moves(int from_pos, bool gen_threats) const {
-  const int file = from_pos % 8;
-  const int rank = from_pos / 8;
+chess::Board::generate_king_moves(int from, bool gen_threats) const {
+  const int file = from % 8;
+  const int rank = from / 8;
 
   std::unordered_set<int> moves;
   constexpr std::array<std::array<int, 2>, 8> shifts = {
@@ -140,46 +138,45 @@ chess::Board::generate_king_moves(int from_pos, bool gen_threats) const {
   }
 
   if (m_kingside_castle[m_turn != pieces::BLACK] &&
-      m_squares[from_pos + 1] == pieces::NONE &&
-      m_squares[from_pos + 2] == pieces::NONE &&
-      ((m_squares[from_pos + 3] & ~m_turn) == pieces::ROOK) &&
-      !king_checked()) {
-    moves.insert(from_pos + 2);
+      m_squares[from + 1] == pieces::NONE &&
+      m_squares[from + 2] == pieces::NONE && !m_checked_squares[from + 1] &&
+      !m_checked_squares[from + 2] &&
+      ((m_squares[from + 3] & ~m_turn) == pieces::ROOK) && !king_checked()) {
+    moves.insert(from + 2);
   }
   if (m_kingside_castle[m_turn != pieces::BLACK] &&
-      m_squares[from_pos - 1] == pieces::NONE &&
-      m_squares[from_pos - 2] == pieces::NONE &&
-      m_squares[from_pos - 3] == pieces::NONE &&
-      ((m_squares[from_pos + 3] & ~m_turn) == pieces::ROOK) &&
-      !king_checked()) {
-    moves.insert(from_pos - 2);
+      m_squares[from - 1] == pieces::NONE &&
+      m_squares[from - 2] == pieces::NONE &&
+      m_squares[from - 3] == pieces::NONE && !m_checked_squares[from - 1] &&
+      !m_checked_squares[from - 2] &&
+      ((m_squares[from + 3] & ~m_turn) == pieces::ROOK) && !king_checked()) {
+    moves.insert(from - 2);
   }
 
   return moves;
 }
 
-std::unordered_set<int> chess::Board::generate_moves(int from_pos,
+std::unordered_set<int> chess::Board::generate_moves(int from,
                                                      bool gen_threats) {
-  if ((m_squares[from_pos] & m_turn) == 0) {
+  if ((m_squares[from] & m_turn) == 0) {
     return {};
   }
 
   std::unordered_set<int> possible_moves_candidates;
-  switch (m_squares[from_pos] & ~m_turn) {
+  switch (m_squares[from] & ~m_turn) {
   case pieces::PAWN:
-    possible_moves_candidates = generate_pawn_moves(from_pos, gen_threats);
+    possible_moves_candidates = generate_pawn_moves(from, gen_threats);
     break;
   case pieces::KNIGHT:
-    possible_moves_candidates = generate_knight_moves(from_pos, gen_threats);
+    possible_moves_candidates = generate_knight_moves(from, gen_threats);
     break;
   case pieces::BISHOP:
   case pieces::ROOK:
   case pieces::QUEEN:
-    possible_moves_candidates =
-        generate_sliding_piece_moves(from_pos, gen_threats);
+    possible_moves_candidates = generate_sliding_piece_moves(from, gen_threats);
     break;
   case pieces::KING:
-    possible_moves_candidates = generate_king_moves(from_pos, gen_threats);
+    possible_moves_candidates = generate_king_moves(from, gen_threats);
     break;
   default:
     std::unreachable();
@@ -190,29 +187,16 @@ std::unordered_set<int> chess::Board::generate_moves(int from_pos,
   }
 
   std::unordered_set<int> possible_moves;
-  for (int move : possible_moves_candidates) {
-    const int save1 = m_squares[from_pos];
-    const int save2 = m_squares[move];
-    const int save3 = m_king_pos[m_turn != pieces::BLACK];
-    auto current_checked_squares = m_checked_squares;
-
-    if ((m_squares[from_pos] & ~m_turn) == pieces::KING) {
-      m_king_pos[m_turn != pieces::BLACK] = move;
-    }
-    m_squares[move] = std::exchange(m_squares[from_pos], pieces::NONE);
-    toggle_turn();
+  for (int to : possible_moves_candidates) {
+    make_move(from, to);
     fill_checked_squares();
     toggle_turn();
     if (!king_checked()) {
-      possible_moves.insert(move);
+      possible_moves.insert(to);
     } else {
-      TraceLog(LOG_INFO, "Impossible move: %d %d", from_pos, move);
+      TraceLog(LOG_INFO, "Impossible move: %d %d", from, to);
     }
-
-    std::swap(current_checked_squares, m_checked_squares);
-    m_squares[from_pos] = save1;
-    m_squares[move] = save2;
-    m_king_pos[m_turn != pieces::BLACK] = save3;
+    unmake_move();
   }
 
   return possible_moves;

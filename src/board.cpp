@@ -39,6 +39,7 @@ chess::Board::Board(std::string_view fen) {
   fill_checked_squares();
   toggle_turn();
   ++m_positions_counter[to_fen()];
+  m_history.push(*this);
 }
 
 void chess::Board::make_move(int from, int to) {
@@ -53,8 +54,7 @@ void chess::Board::make_move(int from, int to) {
   }
 
   // en passant
-  if ((m_squares[from] & pieces::PAWN) != 0 &&
-      to == m_en_passant_target_square) {
+  if (selected_piece == pieces::PAWN && to == m_en_passant_target_square) {
     if (m_turn == pieces::WHITE) {
       m_squares[m_en_passant_target_square + 8] = pieces::NONE;
     } else {
@@ -101,7 +101,6 @@ void chess::Board::make_move(int from, int to) {
     m_squares[to] = m_turn | pieces::QUEEN;
   }
 
-  fill_checked_squares();
   m_selected_piece_square = -1;
 
   if (m_turn == pieces::BLACK) {
@@ -114,7 +113,17 @@ void chess::Board::make_move(int from, int to) {
       std::string(board_string_repr.begin(), board_string_repr.begin() + it);
   m_position_occured_max_count = std::max(
       ++m_positions_counter[board_string_repr], m_position_occured_max_count);
+  fill_checked_squares();
   toggle_turn();
+  m_history.push(*this);
+}
+
+void chess::Board::unmake_move() {
+  if (m_history.size() <= 1) {
+    return;
+  }
+  m_history.pop();
+  *this = m_history.top();
 }
 
 chess::Board::State chess::Board::game_state() {

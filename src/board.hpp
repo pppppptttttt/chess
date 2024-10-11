@@ -3,9 +3,11 @@
 
 #include <raylib-cpp.hpp>
 #include <array>
+#include <stack>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 #include "pieces.hpp"
 
 namespace chess {
@@ -27,9 +29,10 @@ private:
   int m_position_occured_max_count = 1;
 
 public:
+  using Stack = std::stack<Board, std::vector<Board>>;
   void make_move(int from, int to);
-  std::unordered_set<int> generate_moves(int from_pos,
-                                         bool gen_threats = false);
+  void unmake_move();
+  std::unordered_set<int> generate_moves(int from, bool gen_threats = false);
 
   const std::array<bool, 64> &checked_squares() const {
     return m_checked_squares;
@@ -37,19 +40,23 @@ public:
 
   int square(int pos) const { return m_squares[pos]; }
 
+  Stack &history() { return m_history; }
+
 private:
+  inline static Stack m_history;
+
   bool king_checked() const {
     return m_checked_squares[m_king_pos[m_turn != pieces::BLACK]];
   }
 
-  std::unordered_set<int> generate_pawn_moves(int from_pos,
+  std::unordered_set<int> generate_pawn_moves(int from,
                                               bool gen_threats = false) const;
-  std::unordered_set<int> generate_knight_moves(int from_pos,
+  std::unordered_set<int> generate_knight_moves(int from,
                                                 bool gen_threats = false) const;
-  std::unordered_set<int> generate_king_moves(int from_pos,
+  std::unordered_set<int> generate_king_moves(int from,
                                               bool gen_threats = false) const;
   std::unordered_set<int>
-  generate_sliding_piece_moves(int from_pos, bool gen_threats = false) const;
+  generate_sliding_piece_moves(int from, bool gen_threats = false) const;
 
   void toggle_turn() {
     if (m_turn == pieces::BLACK) {
